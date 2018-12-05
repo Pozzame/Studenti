@@ -7,18 +7,20 @@ namespace Studenti
 {
     class Program
     {
-        static public IList<Student> School = new List <Student>();
-        private static int MAX_VOTE = 10;
+        public IList<Student> School = new List <Student>();
+        private int MAX_VOTE = 10;
         static void Main(string[] args)
         {
-            using (var reader = new StreamReader(@"C:\Users\Pozzame\Source\Repos\Studenti\Studenti\Studenti.csv"))
+            IList<Student> School = new List<Student>();
+            
+            using (var reader = new StreamReader(@"C:\Users\Allievo 3\source\repos\Studenti\Studenti\Studenti.csv"))
             {
-                //List<string> listA = new List<string>();
-                //List<string> listB = new List<string>();
+                string line;
+                string[] values;
                 while (!reader.EndOfStream)
                 {
-                    var line = reader.ReadLine();
-                    var values = line.Split(',');
+                    line = reader.ReadLine();
+                    values = line.Split(',');
                     School.Add(new Student(Convert.ToInt32(values[0]), values[1], values[2], Convert.ToInt32(values[3]), Convert.ToChar(values[4]), Convert.ToInt32(values[5])));
                 }
             }
@@ -31,13 +33,13 @@ namespace Studenti
                 switch (input)
                 {
                     case '?':
-                        Console.WriteLine("L = List all Students;\nF = Search for ID;\nV = Average value of students votes;\nM = Mode of students votes;\nD = Median f students votes;\nQ = Quit.");
+                        Console.WriteLine("L = List all Students;\nF = Search for ID;\nV = Average value of students votes;\nM = Mode of students votes;\nD = Median of students votes;\nQ = Quit.");
                         break;
                     case 'l':
                     case 'L':
-                        foreach (var Student in School)
+                        foreach (var student in School)
                         {
-                            Console.WriteLine(Student.ToString());
+                            Console.WriteLine(student);
                         }
                         break;
                     case 'f':
@@ -46,114 +48,86 @@ namespace Studenti
                         int key = Convert.ToInt32(Console.ReadLine());
                         bool found = false;
 
-                        foreach (var Student in School)
+                        foreach (var student in School)
                         {
-                            if (Student.ID == key)
+                            if (student.ID == key)
                             {
-                                Console.WriteLine(Student.ToString());
+                                Console.WriteLine(student);
                                 found = true;
+                                break;
                             }
                         }
-                        if (found != true)
-                        {
+                        if (!found)
                             Console.WriteLine("Student not found...");
-                        }
                         break;
                     case 'v':
                     case 'V':
-                        int tot=0;
-                        foreach (var Student in School)
+                        double tot = 0;
+                        foreach (var student in School)
                         {
-                            tot += Student.Vote;
+                            tot += student.Vote;
                         }
-                        float average = (float) tot / School.Count;
+                        double average = tot / School.Count;
                         Console.WriteLine("The average grade of all stuents is:" + average);
                         break;
                     case 'm':
                     case 'M':
+                        IDictionary<int, int> map = new Dictionary<int, int>();
+                        foreach (var student in School)
+                        {
+                            if (map.ContainsKey(student.Vote))
+                            {
+                                map[student.Vote]++;
+                            }
+                            else
+                            {
+                                map.Add(student.Vote, 1);
+                            }
+                        }
+                        int moda = 0;
+                        int maxFrequency = 0;
+                        foreach (KeyValuePair<int, int> item in map)
+                        {
+                            if (item.Value > maxFrequency)
+                            {
+                                moda = item.Key;
+                                maxFrequency = item.Value;
+                            }
+                        }
+                        Console.WriteLine("The mode is: " + moda);
+                        break;
+                    case 'd':
+                    case 'D':
+                        int[] votes = new int[School.Count];     //creo un array di int chiamato votes lungo quanto la lista degli studenti
+                        int i = 0;
+
                         foreach (var Student in School)
                         {
-                            IDictionary<int, int> map = new Dictionary<int, int>();
-                            foreach (var student in School)
-                            {
-                                if (map.ContainsKey(student.Vote))
-                                {
-                                    map[student.Vote]++;
-                                }else
-                                {
-                                    map.Add(student.Vote, 1);
-                                }
-                                //try
-                                //{
-                                //    map[student.Vote]++;
-                                //}
-                                //catch (KeyNotFoundException)
-                                //{
-                                //    map.Add(student.Vote, 1);
-                                //}
-                            }
-                            bubbleSort(ref map);
+                            votes[i] = Student.Vote;           //Inserisce nell'array i voti
+                            i++;
+                        }
+                        
+                        Array.Sort(votes);
 
-                            for (int i = map.Count; i > 0; i--)
-                            {
-                                while (map[i]>map[i-1])
-                                {
-                                    Console.WriteLine("Moda is: " + i + "trovata" + map[i] + "volte.");
-                                }
-                            }
-                            //for (int i = 0; i < map.Count; i++)
-                            //{
-                            //    Console.WriteLine(i + map[i]);
-                            //}
-                            //{
-                            //    Console.WriteLine(map.ToString());
-                            //}
+                        if (votes.Length % 2 != 0)                     //Se è dispari
+                        {
+                            Console.WriteLine("The mediane is: " + votes[votes.Length / 2]);          //La media è..  la posizione della media è alla metà
+                        }
+                        else
+                        {
+                            double mediane = (votes[votes.Length / 2] + votes[(votes.Length / 2) - 1]) / 2.0;    //(Se è pari) Fai la media dei due voti mediani
+                            Console.WriteLine("The mediane is: " + mediane);
                         }
                         break;
+
                     default:
-                        { break; }
+                        break; 
                 }
-            Console.WriteLine("Enter command: (? for Help)");
-            input = Console.ReadKey().KeyChar;
-            Console.WriteLine();
+                Console.WriteLine("Enter command: (? for Help)");
+                input = Console.ReadKey().KeyChar;
+                Console.WriteLine();
             }
-
-            void bubbleSort(ref IDictionary<int,int> map)
-            {
-                int i, j;
-                for (i = 0; i < map.Count - 1; i++)
-
-                    // Last i elements are already in place    
-                    for (j = 0; j < MAX_VOTE; j++)
-                        if (map.ContainsKey(j) && map.ContainsKey(j + 1) && map[j] > map[j + 1])
-                        {
-                            int temp = map[j];
-                            map[j] = map[i];
-                            map[i] = temp;
-                        }
-                            if (map.ContainsKey(j + 1))
-                            {
-                                if (map[j] > map[j + 1])
-                                {
-
-                                }
-                            }
-                        }
-                        if (map[j] > map[j + 1])
-                        {
-                            int temp = map[j];
-                            map[j] = map[i];
-                            map[i] = temp;
-                        }
-            }
-            //void swap(ref int xp, ref int yp)
-            //{
-            //    int temp = xp;
-            //    xp = yp;
-            //    yp = temp;
-            //}
-            //Student Pippo = new Student(1, "Pippo", "Pasticcio", 23, 'M', 5);
-            //Console.WriteLine(Pippo.ToString());
+            Console.WriteLine("Bye bye...");
         }
     }
 }
